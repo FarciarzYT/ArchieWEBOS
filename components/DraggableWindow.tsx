@@ -232,7 +232,7 @@ export function DraggableWindow({
             role="dialog"
             aria-label={title}
             onMouseDown={() => onFocus?.(id)}
-            className="fixed select-none"
+            className="fixed select-none p-3"
             style={{ left: pos.x, top: pos.y, width: size.width, height: size.height, zIndex }}
         >
             <div className="flex flex-col h-full rounded-2xl overflow-hidden border-[2.5px] border-blue-600/80 bg-white/70 backdrop-blur-xl shadow-xl">
