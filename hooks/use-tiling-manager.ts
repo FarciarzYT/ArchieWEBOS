@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { LayoutNode, LeafNode, SplitNode, Rect, TilingLayout, Workspace, WorkspaceState } from "@/types/tiling"
 
-const TASKBAR_H = 0  // no bottom dock in i3 mode
+const TASKBAR_H = 28  // height of the bottom dock
 const STATUS_BAR_H = 28  // top i3bar
 
 // ── Tree helpers ─────────────────────────────────────────────────────────────

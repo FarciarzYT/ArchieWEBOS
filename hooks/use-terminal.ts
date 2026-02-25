@@ -21,7 +21,7 @@ const INITIAL_FS: Record<string, FSNode> = {
                         type: "dir",
                         children: {
                             "readme.txt": { type: "file", content: "Welcome to archieOS!\nType 'help' for available commands." },
-                            "notes.txt":  { type: "file", content: "My notes go here..." },
+                            "notes.txt": { type: "file", content: "My notes go here..." },
                         },
                     },
                     Desktop: { type: "dir", children: {} },
@@ -91,17 +91,17 @@ Uptime: just started
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 export function useTerminal() {
-    const [lines, setLines]         = useState<TerminalLine[]>([
+    const [lines, setLines] = useState<TerminalLine[]>([
         { type: "system", text: "archieOS Terminal v0.1.0 — type 'help' for commands" },
         { type: "system", text: "─────────────────────────────────────────────────────" },
     ])
-    const [cwd, setCwd]             = useState<string[]>(["home", "archie"])
+    const [cwd, setCwd] = useState<string[]>(["home", "archie"])
     const [cmdHistory, setCmdHistory] = useState<string[]>([])
     const [historyIdx, setHistoryIdx] = useState(-1)
-    const [fs, setFs]               = useState(INITIAL_FS)
-    const startTime                 = useState(() => Date.now())[0]
+    const [fs, setFs] = useState(INITIAL_FS)
+    const startTime = useState(() => Date.now())[0]
 
-    const push = (line: TerminalLine) => setLines((l) => [...l, line])
+    const push = useCallback((line: TerminalLine) => setLines((l) => [...l, line]), [])
 
     const run = useCallback((raw: string) => {
         const input = raw.trim()
@@ -148,8 +148,8 @@ export function useTerminal() {
                 break
 
             case "uptime": {
-                const secs  = Math.floor((Date.now() - startTime) / 1000)
-                const mins  = Math.floor(secs / 60)
+                const secs = Math.floor((Date.now() - startTime) / 1000)
+                const mins = Math.floor(secs / 60)
                 const hours = Math.floor(mins / 60)
                 push({ type: "output", text: `up ${hours}h ${mins % 60}m ${secs % 60}s` })
                 break
@@ -170,8 +170,8 @@ export function useTerminal() {
 
             case "ls": {
                 const target = arg0 ? resolvePath(cwd, arg0) : cwd
-                const node   = getNode(fs, target)
-                if (!node)             push({ type: "error", text: `ls: ${arg0 || "."}: No such file or directory` })
+                const node = getNode(fs, target)
+                if (!node) push({ type: "error", text: `ls: ${arg0 || "."}: No such file or directory` })
                 else if (node.type === "file") push({ type: "output", text: target[target.length - 1] })
                 else push({ type: "output", text: Object.keys(node.children).join("  ") || "(empty)" })
                 break
@@ -179,7 +179,7 @@ export function useTerminal() {
 
             case "cd": {
                 const target = resolvePath(cwd, arg0)
-                const node   = getNode(fs, target)
+                const node = getNode(fs, target)
                 if (!node || node.type !== "dir") push({ type: "error", text: `cd: ${arg0}: No such directory` })
                 else setCwd(target)
                 break
@@ -188,8 +188,8 @@ export function useTerminal() {
             case "cat": {
                 if (!arg0) { push({ type: "error", text: "cat: missing file name" }); break }
                 const target = resolvePath(cwd, arg0)
-                const node   = getNode(fs, target)
-                if (!node)            push({ type: "error", text: `cat: ${arg0}: No such file` })
+                const node = getNode(fs, target)
+                if (!node) push({ type: "error", text: `cat: ${arg0}: No such file` })
                 else if (node.type === "dir") push({ type: "error", text: `cat: ${arg0}: Is a directory` })
                 else push({ type: "output", text: node.content })
                 break
@@ -249,5 +249,5 @@ export function useTerminal() {
 
     const prompt = "/" + cwd.join("/")
 
-    return { lines, run, prompt, navigateHistory }
+    return { lines, run, prompt, navigateHistory, addLine: push }
 }

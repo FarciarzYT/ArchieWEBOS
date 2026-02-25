@@ -14,7 +14,7 @@ import { useEffect } from "react"
  * Alt+Shift+H/J/K/L  → move focused window
  * Alt+V              → split next window vertically
  * Alt+B              → split next window horizontally
- * Alt+Shift+Space    → toggle floating for focused window
+ * Alt+Shift+Ctrl     → toggle floating for focused window
  * Alt+F              → toggle fullscreen for focused window
  * Alt+1..9,0         → switch to workspace 1..9,10
  * Alt+Shift+1..9,0   → move focused window to workspace
@@ -77,8 +77,8 @@ export function useI3Keybindings(b: Bindings) {
                 return
             }
 
-            // Alt+Shift+Space → toggle floating
-            if (e.shiftKey && key === " ") {
+            // Alt+Shift+Ctrl → toggle floating
+            if (e.shiftKey && e.ctrlKey && (key === "Control" || key === "Shift" || key === "Alt")) {
                 e.preventDefault()
                 if (b.focusedId) b.toggleFloating(b.focusedId)
                 return

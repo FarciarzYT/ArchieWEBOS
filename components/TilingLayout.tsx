@@ -15,10 +15,10 @@ type TileProps = {
 }
 
 function TileFrame({ windowId, rect, isFocused, isFullscreen, onFocus, children }: TileProps) {
-    const GAP = 2  // i3-style minimal gaps
+    const GAP = 8  // i3-style gaps
 
     const style = isFullscreen
-        ? { position: "fixed" as const, inset: 0, zIndex: 9000 }
+        ? { position: "fixed" as const, inset: 0, zIndex: 9999 }
         : {
             position: "fixed" as const,
             left: rect.x + GAP,

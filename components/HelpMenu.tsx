@@ -53,7 +53,7 @@ export function HelpMenu() {
                     onClick={() => setVisible(false)}
                     className="mt-4 w-full py-1.5 text-[12px] font-bold font-mono text-[#ebdbb2] bg-[#4c7899] hover:bg-[#5a8faa] transition"
                 >
-                    close (Shift+H)
+                    close (Shift+ctrl+H)
                 </button>
             </div>
         </div>
