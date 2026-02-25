@@ -6,6 +6,7 @@ import {
 } from "react"
 import { WindowTitleBar } from "@/components/WindowContent"
 import DraggableWindowProps from "@/types/DraggableWindowProps"
+import { TASKBAR_H, STATUS_BAR_H } from "@/hooks/use-tiling-manager"
 
 function ResizeHandle({ onResizeStart }: { onResizeStart: (e: ReactMouseEvent) => void }) {
     return (
@@ -19,28 +20,33 @@ function ResizeHandle({ onResizeStart }: { onResizeStart: (e: ReactMouseEvent) =
 }
 
 export function DraggableWindow({
-                                    id, title = "Window",
-                                    defaultPosition, defaultSize = { width: 400, height: 300 },
-                                    minSize = { width: 220, height: 140 },
-                                    visible = true, zIndex = 1,
-                                    onFocus, onClose, onMinimize,
-                                    resizable = true, children,
-                                }: DraggableWindowProps) {
+    id, title = "Window",
+    defaultPosition, defaultSize = { width: 400, height: 300 },
+    minSize = { width: 220, height: 140 },
+    visible = true, zIndex = 1,
+    onFocus, onClose, onMinimize,
+    resizable = true, children,
+}: DraggableWindowProps) {
 
-    const [pos,  setPos]  = useState({ x: 0, y: 0 })
+    const [pos, setPos] = useState({ x: 0, y: 0 })
     const [size, setSize] = useState(defaultSize)
-    const initialized     = useRef(false)
+    const initialized = useRef(false)
+
+    const posRef = useRef(pos)
+    posRef.current = pos
+    const sizeRef = useRef(size)
+    sizeRef.current = size
 
     useEffect(() => {
         if (initialized.current) return
         initialized.current = true
         setPos(defaultPosition ?? {
-            x: Math.max(0, (window.innerWidth  - defaultSize.width)  / 2),
-            y: Math.max(0, (window.innerHeight - defaultSize.height) / 2),
+            x: Math.max(0, (window.innerWidth - defaultSize.width) / 2),
+            y: Math.max(STATUS_BAR_H, (window.innerHeight - STATUS_BAR_H - TASKBAR_H - defaultSize.height) / 2 + STATUS_BAR_H),
         })
     }, [defaultPosition, defaultSize])
 
-    const [maximized,  setMaximized]  = useState(false)
+    const [maximized, setMaximized] = useState(false)
     const preMaxState = useRef<{ pos: typeof pos; size: typeof size } | null>(null)
 
     const toggleMaximize = useCallback(() => {
@@ -48,11 +54,11 @@ export function DraggableWindow({
             setPos(preMaxState.current.pos); setSize(preMaxState.current.size); setMaximized(false)
         } else {
             preMaxState.current = { pos, size }
-            setPos({ x: 0, y: 0 }); setSize({ width: window.innerWidth, height: window.innerHeight }); setMaximized(true)
+            setPos({ x: 0, y: STATUS_BAR_H }); setSize({ width: window.innerWidth, height: window.innerHeight - STATUS_BAR_H - TASKBAR_H }); setMaximized(true)
         }
     }, [maximized, pos, size])
 
-    const dragging   = useRef(false)
+    const dragging = useRef(false)
     const dragOffset = useRef({ x: 0, y: 0 })
 
     const handleDragStart = useCallback((e: ReactMouseEvent) => {
@@ -62,7 +68,7 @@ export function DraggableWindow({
         onFocus?.(id)
     }, [pos, id, onFocus, maximized])
 
-    const resizing    = useRef(false)
+    const resizing = useRef(false)
     const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 })
 
     const handleResizeStart = useCallback((e: ReactMouseEvent) => {
@@ -74,17 +80,27 @@ export function DraggableWindow({
 
     useEffect(() => {
         const onMove = (e: globalThis.MouseEvent) => {
-            if (dragging.current)
-                setPos({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y })
-            if (resizing.current)
+            if (dragging.current) {
+                let newX = e.clientX - dragOffset.current.x
+                let newY = e.clientY - dragOffset.current.y
+                newX = Math.max(0, Math.min(newX, window.innerWidth - sizeRef.current.width))
+                newY = Math.max(STATUS_BAR_H, Math.min(newY, window.innerHeight - TASKBAR_H - sizeRef.current.height))
+                setPos({ x: newX, y: newY })
+            }
+            if (resizing.current) {
+                let newW = Math.max(minSize.width, resizeStart.current.w + e.clientX - resizeStart.current.x)
+                let newH = Math.max(minSize.height, resizeStart.current.h + e.clientY - resizeStart.current.y)
+                newW = Math.min(newW, window.innerWidth - posRef.current.x)
+                newH = Math.min(newH, window.innerHeight - TASKBAR_H - posRef.current.y)
                 setSize({
-                    width:  Math.max(minSize.width,  resizeStart.current.w + e.clientX - resizeStart.current.x),
-                    height: Math.max(minSize.height, resizeStart.current.h + e.clientY - resizeStart.current.y),
+                    width: newW,
+                    height: newH,
                 })
+            }
         }
         const onUp = () => { dragging.current = false; resizing.current = false }
         window.addEventListener("mousemove", onMove)
-        window.addEventListener("mouseup",   onUp)
+        window.addEventListener("mouseup", onUp)
         return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
     }, [minSize])
 
@@ -97,7 +113,7 @@ export function DraggableWindow({
             className="fixed select-none"
             style={{ left: pos.x, top: pos.y, width: size.width, height: size.height, zIndex }}
         >
-            <div className="flex flex-col h-full rounded-2xl overflow-hidden border-[2.5px] border-blue-600/80 bg-white/70 backdrop-blur-xl shadow-xl">
+            <div className="flex flex-col h-full mt-7 rounded-2xl border-[2.5px] border-blue-600/80 bg-black/70 backdrop-blur-xl shadow-xl">
                 <WindowTitleBar
                     title={title}
                     onDragStart={handleDragStart}
